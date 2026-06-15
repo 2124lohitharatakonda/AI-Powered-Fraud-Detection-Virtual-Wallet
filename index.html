@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FraudShield — AI-Powered Fraud Detection & Virtual Wallet</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222638;
+      --border: #2e3248;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --danger: #ff4d6d;
+      --warn: #ffa94d;
+      --text: #e8eaf6;
+      --muted: #8b90a7;
+      --success: #40c97e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 64px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+    .nav-brand .logo { width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--muted); }
+    .nav-links span { cursor: pointer; transition: color .2s; }
+    .nav-links span:hover, .nav-links span.active { color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .badge-live { background: var(--success); color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg,#6c63ff,#00d4aa); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+    /* LAYOUT */
+    .wrapper { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 64px); }
+
+    /* SIDEBAR */
+    aside {
+      background: var(--surface); border-right: 1px solid var(--border);
+      padding: 24px 16px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .sidebar-section { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 16px 12px 6px; }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--muted); transition: all .2s;
+    }
+    .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+    .sidebar-item.active { background: rgba(108,99,255,.15); color: var(--accent); }
+    .sidebar-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-badge { margin-left: auto; background: var(--danger); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 700; }
+
+    /* MAIN */
+    main { padding: 28px 32px; overflow-y: auto; }
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; }
+    .page-header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    /* STATS GRID */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px 22px; position: relative; overflow: hidden;
+    }
+    .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+    .stat-card.c1::before { background: var(--accent); }
+    .stat-card.c2::before { background: var(--accent2); }
+    .stat-card.c3::before { background: var(--danger); }
+    .stat-card.c4::before { background: var(--warn); }
+    .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 800; }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .stat-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; padding: 2px 6px; border-radius: 6px; margin-top: 6px; }
+    .up { background: rgba(64,201,126,.15); color: var(--success); }
+    .dn { background: rgba(255,77,109,.15); color: var(--danger); }
+
+    /* GRID 2-COL */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .grid3 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+    /* CARD */
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px;
+    }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .card-title { font-size: 15px; font-weight: 700; }
+    .card-action { font-size: 12px; color: var(--accent); cursor: pointer; }
+
+    /* TRANSACTION TABLE */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { text-align: left; padding: 8px 12px; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; cursor: pointer; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 12px; }
+    .risk-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+    .risk-high { background: rgba(255,77,109,.15); color: var(--danger); }
+    .risk-med { background: rgba(255,169,77,.15); color: var(--warn); }
+    .risk-low { background: rgba(64,201,126,.15); color: var(--success); }
+    .status-chip { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+    .s-blocked { background: rgba(255,77,109,.15); color: var(--danger); }
+    .s-review { background: rgba(255,169,77,.15); color: var(--warn); }
+    .s-cleared { background: rgba(64,201,126,.15); color: var(--success); }
+
+    /* MINI CHART bars */
+    .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+    .bar { flex: 1; border-radius: 4px 4px 0 0; transition: opacity .2s; }
+    .bar:hover { opacity: .75; }
+
+    /* WALLET CARD */
+    .wallet-card {
+      background: linear-gradient(135deg,#6c63ff 0%,#3d35b3 100%);
+      border-radius: 16px; padding: 24px; color: #fff; position: relative; overflow: hidden;
+    }
+    .wallet-card::after { content:''; position:absolute; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,.06); top:-40px; right:-40px; }
+    .wallet-label { font-size: 12px; opacity: .8; margin-bottom: 6px; }
+    .wallet-balance { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+    .wallet-sub { font-size: 12px; opacity: .7; margin-bottom: 20px; }
+    .wallet-row { display: flex; justify-content: space-between; }
+    .wallet-stat { }
+    .wallet-stat .wl { font-size: 11px; opacity: .7; }
+    .wallet-stat .wv { font-size: 15px; font-weight: 700; margin-top: 2px; }
+
+    /* MODEL */
+    .model-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .metric-box { background: var(--surface2); border-radius: 10px; padding: 14px; }
+    .metric-box .ml { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .metric-box .mv { font-size: 20px; font-weight: 800; }
+    .progress-bar { height: 6px; background: var(--surface2); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+
+    /* ALERT FEED */
+    .alert-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .alert-item:last-child { border: none; }
+    .alert-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .alert-dot.red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+    .alert-dot.yellow { background: var(--warn); }
+    .alert-dot.green { background: var(--success); }
+    .alert-text { font-size: 13px; line-height: 1.5; }
+    .alert-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* MINI DONUT placeholder */
+    .donut-wrap { display: flex; align-items: center; gap: 20px; }
+    .donut-svg { flex-shrink: 0; }
+    .donut-legend { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .pulse { animation: pulse 2s infinite; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="logo">🛡</div>
+    FraudShield
+  </div>
+  <div class="nav-links">
+    <span class="active">Dashboard</span>
+    <span>Transactions</span>
+    <span>Wallet</span>
+    <span>Models</span>
+    <span>Reports</span>
+    <span>Settings</span>
+  </div>
+  <div class="nav-right">
+    <span class="badge-live pulse">● LIVE</span>
+    <div class="avatar">LS</div>
+  </div>
+</nav>
+
+<div class="wrapper">
+  <aside>
+    <div class="sidebar-section">Overview</div>
+    <div class="sidebar-item active"><span class="icon">📊</span> Dashboard</div>
+    <div class="sidebar-item"><span class="icon">💳</span> My Wallet</div>
+    <div class="sidebar-item"><span class="icon">🔄</span> Transactions</div>
+
+    <div class="sidebar-section">Detection</div>
+    <div class="sidebar-item"><span class="icon">🚨</span> Fraud Alerts <span class="sidebar-badge">7</span></div>
+    <div class="sidebar-item"><span class="icon">🤖</span> ML Models</div>
+    <div class="sidebar-item"><span class="icon">📈</span> Analytics</div>
+
+    <div class="sidebar-section">Finance</div>
+    <div class="sidebar-item"><span class="icon">💰</span> Spending Patterns</div>
+    <div class="sidebar-item"><span class="icon">📋</span> Reports</div>
+    <div class="sidebar-item"><span class="icon">⚙️</span> Settings</div>
+  </aside>
+
+  <main>
+    <div class="page-header">
+      <h1>AI Fraud Detection Dashboard</h1>
+      <p>Real-time transaction monitoring powered by XGBoost & Ensemble Classifiers · Last updated: just now</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card c1">
+        <div class="stat-label">Total Transactions</div>
+        <div class="stat-value">1,284,730</div>
+        <div class="stat-delta up">↑ 4.2% vs last week</div>
+      </div>
+      <div class="stat-card c2">
+        <div class="stat-label">Fraud Blocked</div>
+        <div class="stat-value">3,841</div>
+        <div class="stat-delta dn">↑ 12.7% detected</div>
+      </div>
+      <div class="stat-card c3">
+        <div class="stat-label">Under Review</div>
+        <div class="stat-value">247</div>
+        <div class="stat-delta dn">↑ 18 pending</div>
+      </div>
+      <div class="stat-card c4">
+        <div class="stat-label">Model Accuracy</div>
+        <div class="stat-value">98.7%</div>
+        <div class="stat-delta up">↑ 0.3% improved</div>
+      </div>
+    </div>
+
+    <!-- ROW 1 -->
+    <div class="grid3">
+      <!-- TRANSACTION TABLE -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Transactions</div>
+          <div class="card-action">View All →</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Merchant</th>
+              <th>Amount</th>
+              <th>Risk Score</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code style="color:var(--muted);font-size:11px">TXN-928471</code></td>
+              <td>Amazon US</td>
+              <td><strong>$2,340.00</strong></td>
+              <td><span class="risk-chip risk-high">● 94%</span></td>
+              <td><span class="status-chip s-blocked">Blocked</span></td>
+            </tr>
+            <tr>
+              <td><code style="color:var(--muted);font-size:11px">TXN-928470</code></td>
+              <td>Starbucks</td>
+              <td><strong>$8.50</strong></td>
+              <td><span class="risk-chip risk-low">● 3%</span></td>
+              <td><span class="status-chip s-cleared">Cleared</span></td>
+            </tr>
+            <tr>
+              <td><code style="color:var(--muted);font-size:11px">TXN-928469</code></td>
+              <td>Unknown Merchant</td>
+              <td><strong>$899.00</strong></td>
+              <td><span class="risk-chip risk-high">● 87%</span></td>
+              <td><span class="status-chip s-blocked">Blocked</span></td>
+            </tr>
+            <tr>
+              <td><code style="color:var(--muted);font-size:11px">TXN-928468</code></td>
+              <td>Netflix</td>
+              <td><strong>$15.99</strong></td>
+              <td><span class="risk-chip risk-low">● 6%</span></td>
+              <td><span class="status-chip s-cleared">Cleared</span></td>
+            </tr>
+            <tr>
+              <td><code style="color:var(--muted);font-size:11px">TXN-928467</code></td>
+              <td>Crypto Exchange</td>
+              <td><strong>$5,000.00</strong></td>
+              <td><span class="risk-chip risk-med">● 61%</span></td>
+              <td><span class="status-chip s-review">Review</span></td>
+            </tr>
+            <tr>
+              <td><code style="color:var(--muted);font-size:11px">TXN-928466</code></td>
+              <td>Walmart</td>
+              <td><strong>$124.30</strong></td>
+              <td><span class="risk-chip risk-low">● 9%</span></td>
+              <td><span class="status-chip s-cleared">Cleared</span></td>
+            </tr>
+            <tr>
+              <td><code style="color:var(--muted);font-size:11px">TXN-928465</code></td>
+              <td>VPN Service XYZ</td>
+              <td><strong>$349.00</strong></td>
+              <td><span class="risk-chip risk-med">● 55%</span></td>
+              <td><span class="status-chip s-review">Review</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SIDEBAR CARDS -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <!-- Wallet -->
+        <div class="wallet-card">
+          <div class="wallet-label">Protected Balance</div>
+          <div class="wallet-balance">$48,230.50</div>
+          <div class="wallet-sub">Virtual Wallet · USD · Verified ✓</div>
+          <div class="wallet-row">
+            <div class="wallet-stat"><div class="wl">Income</div><div class="wv">+$12,400</div></div>
+            <div class="wallet-stat"><div class="wl">Spent</div><div class="wv">$4,182</div></div>
+            <div class="wallet-stat"><div class="wl">Saved</div><div class="wv">$8,248</div></div>
+          </div>
+        </div>
+
+        <!-- Alert Feed -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔔 Live Alerts</div></div>
+          <div class="alert-item">
+            <div class="alert-dot red pulse"></div>
+            <div><div class="alert-text">High-risk transaction flagged — <strong>TXN-928471</strong> blocked automatically</div><div class="alert-time">2 min ago · XGBoost Classifier</div></div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot yellow"></div>
+            <div><div class="alert-text">Unusual spending pattern detected on account <strong>#4429</strong></div><div class="alert-time">14 min ago · Anomaly Detection</div></div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot green"></div>
+            <div><div class="alert-text">Model retrained successfully — accuracy improved to <strong>98.7%</strong></div><div class="alert-time">1 hr ago · ML Pipeline</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2 -->
+    <div class="grid2">
+      <!-- BAR CHART -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Fraud Detection — Last 7 Days</div>
+          <div class="card-action">Export CSV</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;">
+          <span style="font-size:12px;color:var(--muted)">Blocked Transactions</span>
+          <span style="font-size:12px;color:var(--success);font-weight:700">Total: 3,841</span>
+        </div>
+        <div class="bar-chart">
+          <div class="bar" style="height:45%;background:var(--accent);"></div>
+          <div class="bar" style="height:62%;background:var(--accent);"></div>
+          <div class="bar" style="height:38%;background:var(--accent);"></div>
+          <div class="bar" style="height:75%;background:var(--accent);"></div>
+          <div class="bar" style="height:55%;background:var(--accent);"></div>
+          <div class="bar" style="height:88%;background:var(--danger);"></div>
+          <div class="bar" style="height:70%;background:var(--accent);"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:8px;">
+          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+        </div>
+      </div>
+
+      <!-- MODEL METRICS -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">🤖 Model Performance</div></div>
+        <div class="model-metrics">
+          <div class="metric-box">
+            <div class="ml">Precision</div>
+            <div class="mv" style="color:var(--success)">97.4%</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:97.4%;background:var(--success)"></div></div>
+          </div>
+          <div class="metric-box">
+            <div class="ml">Recall</div>
+            <div class="mv" style="color:var(--accent)">96.8%</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:96.8%"></div></div>
+          </div>
+          <div class="metric-box">
+            <div class="ml">F1 Score</div>
+            <div class="mv" style="color:var(--accent2)">0.971</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:97.1%;background:var(--accent2)"></div></div>
+          </div>
+          <div class="metric-box">
+            <div class="ml">AUC-ROC</div>
+            <div class="mv" style="color:var(--warn)">0.994</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:99.4%;background:var(--warn)"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;font-size:12px;color:var(--muted);background:var(--surface2);padding:10px 12px;border-radius:8px;">
+          ⚙️ Active Models: <strong style="color:var(--text)">XGBoost v3.2</strong> · <strong style="color:var(--text)">RandomForest</strong> · <strong style="color:var(--text)">Isolation Forest</strong>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>
