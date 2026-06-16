@@ -141,7 +141,7 @@ Every transaction is scored in **< 50ms** using a trained XGBoost model. The sys
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Structure -
 
 ```
 AI-Powered-Fraud-Detection-Virtual-Wallet/
